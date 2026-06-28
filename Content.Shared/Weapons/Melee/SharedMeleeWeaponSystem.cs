@@ -262,10 +262,10 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
     {
         if (!Resolve(uid, ref component))
             return 0;
-
         var ev = new GetMeleeAttackRateEvent(uid, component.AttackRate, 1, user);
         RaiseLocalEvent(uid, ref ev);
-
+        if (uid != user) // Corvax-Wega-Heretic
+            RaiseLocalEvent(user, ref ev); // Corvax-Wega-Heretic
         return ev.Rate * ev.Multipliers;
     }
 

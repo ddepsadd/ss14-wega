@@ -1,0 +1,14 @@
+- type: hereticKnowledge
+  id: HereticCodexBasics
+  name: heretic-know-basics-name
+  description: heretic-know-basics-desc
+  cost: 1
+  stage: 0
+
+- type: hereticKnowledge
+  id: HereticPathAsh
+  name: heretic-know-ash-name
+  description: heretic-know-ash-desc
+  cost: 1
+  path: Ash
+  stage: 1

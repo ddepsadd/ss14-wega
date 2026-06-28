@@ -1,0 +1,16 @@
+- type: entity
+  parent: BaseGameRule
+  id: Heretic
+  components:
+  - type: GameRule
+    minPlayers: 0
+  - type: HereticRule
+  - type: AntagSelection
+    lateJoinAdditional: true
+    antags:
+    - !type:LinearAntagCount
+      proto: Heretic
+      playerRatio: 15
+      range:
+        min: 1
+        max: 4

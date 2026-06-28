@@ -1,0 +1,18 @@
+- type: entity
+  id: MansusGrasp
+  name: mansus grasp
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Wega/Heretic/mansus_grasp.rsi
+    state: icon
+  - type: Item
+  - type: MansusGrasp
+    knockdownTime: 3
+    damage:
+      types:
+        Heat: 10
+    invocations:
+    - "Ave Mansus, da mihi vires!"
+    - "Aperi portam, tenebrae veniunt!"
+    - "Sanguis et cinis, audite me!"

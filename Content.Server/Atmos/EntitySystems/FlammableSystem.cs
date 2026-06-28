@@ -212,6 +212,11 @@ namespace Content.Server.Atmos.EntitySystems
             if (!flammable.OnFire && !otherFlammable.OnFire)
                 return; // Neither are on fire
 
+            var spreadEv = new FireSpreadAttemptEvent(uid, otherUid); // Corvax-Wega-Heretic
+            RaiseLocalEvent(uid, ref spreadEv); // Corvax-Wega-Heretic
+            if (spreadEv.Cancelled) // Corvax-Wega-Heretic
+                return; // Corvax-Wega-Heretic
+
             // Both are on fire -> equalize fire stacks.
             // Weight each thing's firestacks by its mass
             var mass1 = 1f;

@@ -1,0 +1,8 @@
+- type: hereticPath
+  id: Ash
+  name: heretic-path-ash-name
+  color: "#C8A24B"
+  entryNode: HereticPathAsh
+  icon:
+    sprite: _Wega/Heretic/abilities_heretic.rsi
+    state: mansus_grasp

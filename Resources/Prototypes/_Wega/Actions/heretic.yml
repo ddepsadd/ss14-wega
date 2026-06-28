@@ -1,0 +1,52 @@
+- type: entity
+  parent: BaseAction
+  id: ActionMansusGrasp
+  name: "[color=#9b59b6]Mansus Grasp[/color]"
+  description: "Призови Хватку Мансуса в руку, затем коснись жертвы."
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Action
+    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: "mansus_grasp" }
+    useDelay: 0.5
+  - type: InstantAction
+    event: !type:HereticMansusGraspEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionHereticOpenStore
+  name: "[color=#9b59b6]Mansus Codex[/color]"
+  description: "Открой кодекс знаний."
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Action
+    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: "open_store" }
+    useDelay: 0.5
+  - type: InstantAction
+    event: !type:HereticOpenStoreEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionHereticAshFlames
+  name: "[color=#9b59b6]Огненное кольцо[/color]"
+  description: "Поджигает всё вокруг."
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Action
+    icon:
+      sprite: _Wega/Heretic/abilities_heretic.rsi
+      state: mansus_grasp
+    useDelay: 20
+  - type: InstantAction
+    event: !type:HereticAshExplosionEvent
+
+- type: entity
+  parent: BaseToggleAction
+  id: ActionHereticAshFury
+  name: "[color=#9b59b6]Ярость пепла[/color]"
+  description: "Воспламенись. Скорость и ярость атак в обмен на пламя."
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Action
+    useDelay: 1
+    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: mansus_grasp }
+    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashlord_rite1 }

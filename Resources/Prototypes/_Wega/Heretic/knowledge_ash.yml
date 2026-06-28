@@ -1,0 +1,38 @@
+- type: hereticKnowledge
+  id: HereticAshGrasp
+  name: heretic-know-ashgrasp-name
+  description: heretic-know-ashgrasp-desc
+  path: Ash
+  stage: 1
+  cost: 1
+
+- type: hereticKnowledge
+  id: HereticAshFlames
+  name: heretic-know-ashflames-name
+  description: heretic-know-ashflames-desc
+  path: Ash
+  stage: 2
+  cost: 2
+  prerequisites: [ HereticAshGrasp ]
+  actions: [ ActionHereticAshFlames ]
+
+- type: hereticKnowledge
+  id: HereticAshMantle
+  name: heretic-know-ashmantle-name
+  description: heretic-know-ashmantle-desc
+  path: Ash
+  stage: 3
+  cost: 3
+  conflictsWith: [ HereticAshFury ]
+
+- type: hereticKnowledge
+  id: HereticAshFury
+  name: heretic-know-ashfury-name
+  description: heretic-know-ashfury-desc
+  path: Ash
+  stage: 3
+  cost: 3
+  conflictsWith: [ HereticAshMantle ]
+  actions: [ ActionHereticAshFury ]
+  components:
+  - type: HereticFury
