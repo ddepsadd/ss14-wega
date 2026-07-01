@@ -26,6 +26,9 @@ heretic-know-ashmantle-desc = Огонь тебя не тронет
 heretic-know-ashfury-name = Ярость пепла
 heretic-know-ashfury-desc = Сила в пламени
 
+admin-verb-make-heretic = Сделать цель еретиком.
+admin-verb-text-make-heretic = Сделать еретиком
+
 heretic-know-ashgrasp-tooltip = Усиливает Хватку Мансуса: касание поджигает жертву.
     {"["}color=#ECC76E]Эффект[/color]  поджог цели
     {"["}color=#ECC76E]Огонь[/color]  +5 ожогов

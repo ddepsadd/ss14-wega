@@ -37,6 +37,7 @@ public sealed partial class AdminVerbSystem
     private static readonly EntProtoId DefaultVampireRule = "Vampire";
     private static readonly EntProtoId DefaultBloodCultRule = "BloodCult";
     private static readonly EntProtoId DefaultVeilCultRule = "VeilCult";
+    private static readonly EntProtoId DefaultHereticRule = "Heretic"; // Corvax-Wega-Heretic
     // Corvax-Wega-Antags-end
 
     // All antag verbs have names so invokeverb works.
@@ -276,5 +277,21 @@ public sealed partial class AdminVerbSystem
         };
         args.Verbs.Add(veilcultist);
         // Corvax-Wega-Veil-Cult-end
+
+        // Corvax-Wega-Heretic-start
+        Verb heretic = new()
+        {
+            Text = Loc.GetString("admin-verb-text-make-heretic"),
+            Category = VerbCategory.Antag,
+            Icon = new SpriteSpecifier.Rsi(new ResPath("/Textures/_Wega/Heretic/abilities_heretic.rsi"), "mansus_grasp"),
+            Act = () =>
+            {
+                _antag.ForceMakeAntag<HereticRuleComponent>(targetPlayer, DefaultHereticRule);
+            },
+            Impact = LogImpact.High,
+            Message = Loc.GetString("admin-verb-make-heretic"),
+        };
+        args.Verbs.Add(heretic);
+        // Corvax-Wega-Heretic-end
     }
 }
