@@ -1,7 +1,9 @@
 using Content.Server.Atmos.Components;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Temperature.Systems;
+using Content.Shared._Wega.Atmos;
 using Content.Shared.Actions;
+using Content.Shared.Actions.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Damage;
@@ -16,6 +18,7 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Temperature;
+using Content.Shared.Temperature.Components;
 using Content.Shared.Toggleable;
 using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Components;
@@ -36,6 +39,7 @@ public sealed class AshSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly TemperatureSystem _temperature = default!;
+    [Dependency] private readonly SharedActionsSystem _actions = default!;
 
     private const float GraspFireStacks = 3f;
     private const float FlamesFireStacks = 2f;
@@ -59,15 +63,20 @@ public sealed class AshSystem : EntitySystem
     private const float FuryTransferMin = 1f;
     private const float FuryTransferMax = 3f;
 
+    private const float FuryVacuumExtraFade = 0.2f;
+    private const float MantleExtinguishPerUnit = 0.05f;
+    private const float FuryExtinguishPerUnit = 0.1f;
+
     private const float MantleHealBurning = 10f;
     private const float MantleHealIdle = 2f;
     private const float MantleTickInterval = 2f;
     private const float MantleStackBurnPerTick = 1f;
 
     private const float GibThreshold = 1500f;
-    private const float GibBuffer = 25f;
-    private const float GibFadeZone = 200f;
-    private const float GibFadeRate = 0.5f;
+    private const float GibBuffer = 35f;
+    private const float GibFadeZone = 300f;
+    private const float SafeTemp = 350f;
+    private const float GibFadeRate = 3f;
 
     private static readonly ProtoId<DamageTypePrototype> HeatType = "Heat";
     private readonly Dictionary<EntityUid, float> _mantleAccumulator = new();
@@ -85,6 +94,8 @@ public sealed class AshSystem : EntitySystem
         SubscribeLocalEvent<MeleeWeaponComponent, MeleeHitEvent>(OnMeleeHit);
         SubscribeLocalEvent<FlammableComponent, FireSpreadAttemptEvent>(OnFireSpread);
         SubscribeLocalEvent<HereticBurnVictimComponent, DamageChangedEvent>(OnVictimDamage);
+        SubscribeLocalEvent<HereticComponent, FireExtinguishAttemptEvent>(OnExtinguishAttempt);
+        SubscribeLocalEvent<HereticComponent, VacuumExtinguishAttemptEvent>(OnVacuumExtinguish);
     }
 
     public override void Update(float frameTime)
@@ -125,6 +136,7 @@ public sealed class AshSystem : EntitySystem
         args.Handled = true;
 
         comp.Active = !comp.Active;
+        _actions.SetToggled((args.Action, null), comp.Active);
         _movement.RefreshMovementSpeedModifiers(uid);
 
         var msg = comp.Active ? "heretic-fury-on" : "heretic-fury-off";
@@ -259,42 +271,71 @@ public sealed class AshSystem : EntitySystem
         return false;
     }
 
+    private float GetRealHeat(EntityUid uid)
+    {
+        if (!TryComp<DamageableComponent>(uid, out var dmg))
+            return 0f;
+        var all = _damage.GetAllDamage((uid, dmg));   // легально, RA0002-free
+        return all.DamageDict.GetValueOrDefault(HeatType).Float();
+    }
+
     private void MarkBurnVictim(EntityUid target)
     {
         if (!HasComp<MobStateComponent>(target) || HasComp<HereticComponent>(target))
             return;
-        EnsureComp<HereticBurnVictimComponent>(target);
+        var comp = EnsureComp<HereticBurnVictimComponent>(target);
+        comp.AccumulatedHeat = GetRealHeat(target);
     }
 
     private void OnVictimDamage(EntityUid uid, HereticBurnVictimComponent comp, DamageChangedEvent args)
     {
-        if (args.DamageDelta != null)
-        {
-            var delta = args.DamageDelta.DamageDict.GetValueOrDefault(HeatType).Float();
-            if (delta > 0)
-                comp.AccumulatedHeat += delta;
-        }
+        comp.AccumulatedHeat = GetRealHeat(uid);
 
         var cap = GibThreshold - GibBuffer;
-
-        if (comp.AccumulatedHeat >= cap)
-        {
-            _flammable.Extinguish(uid);
-            _temperature.ForceChangeTemperature(uid, 320f);   // сброс перегрева ниже порога 325
-            RemComp<HereticBurnVictimComponent>(uid);
-            return;
-        }
-
         if (comp.AccumulatedHeat >= cap - GibFadeZone
             && TryComp<FlammableComponent>(uid, out var fl)
             && fl.FireStacks > 0)
         {
             var proximity = (comp.AccumulatedHeat - (cap - GibFadeZone)) / GibFadeZone;
-            _flammable.AdjustFireStacks(uid, -GibFadeRate * proximity, fl);
+            var curved = proximity * proximity;
+            _flammable.AdjustFireStacks(uid, -GibFadeRate * curved, fl);
         }
 
-        if (TryComp<FlammableComponent>(uid, out var f) && !f.OnFire)
+        var temp = TryComp<TemperatureComponent>(uid, out var t) ? t.CurrentTemperature : 0f;
+        var notBurning = !TryComp<FlammableComponent>(uid, out var f) || !f.OnFire;
+        if (notBurning && temp < SafeTemp)
             RemComp<HereticBurnVictimComponent>(uid);
+    }
+
+
+    private void OnExtinguishAttempt(EntityUid uid, HereticComponent comp, ref FireExtinguishAttemptEvent args)
+    {
+        float perUnit;
+        if (_knowledge.HasKnowledge(uid, "HereticAshMantle"))
+            perUnit = MantleExtinguishPerUnit;
+        else if (_knowledge.HasKnowledge(uid, "HereticAshFury"))
+            perUnit = FuryExtinguishPerUnit;
+        else
+            return;
+
+        if (!TryComp<FlammableComponent>(uid, out var fl))
+            return;
+
+        var scale = args.BaseAdjustment / -1.5f;
+        _flammable.AdjustFireStacks(uid, -perUnit * scale, fl);
+        args.Handled = true;
+    }
+
+    private void OnVacuumExtinguish(EntityUid uid, HereticComponent comp, ref VacuumExtinguishAttemptEvent args)
+    {
+        if (_knowledge.HasKnowledge(uid, "HereticAshMantle"))
+            args.Handled = true;
+        else if (_knowledge.HasKnowledge(uid, "HereticAshFury"))
+        {
+            if (TryComp<FlammableComponent>(uid, out var fl))
+                _flammable.AdjustFireStacks(uid, -FuryVacuumExtraFade, fl);
+            args.Handled = true;
+        }
     }
 
     private void OnMeleeHit(EntityUid weapon, MeleeWeaponComponent comp, MeleeHitEvent args)
@@ -309,9 +350,7 @@ public sealed class AshSystem : EntitySystem
         if (available <= 0)
             return;
 
-        var rawRate = _melee.GetAttackRate(weapon, user, comp);
-        var furyBonus = GetFuryBonus(user, FuryAttackBase);
-        var realRate = furyBonus > 0 ? rawRate / furyBonus : rawRate;
+        var realRate = _melee.GetAttackRate(weapon, user, comp);   // уже с баффами Ярости
         var portion = Math.Clamp(FuryTransferBase / realRate, FuryTransferMin, FuryTransferMax);
 
         var hitMob = false;

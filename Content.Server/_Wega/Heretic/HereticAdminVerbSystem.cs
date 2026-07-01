@@ -2,6 +2,7 @@ using Content.Server.Administration.Managers;
 using Content.Server.Antag;
 using Content.Server.GameTicking.Rules.Components;
 using Content.Shared.Database;
+using Content.Shared.Heretic.Components;
 using Content.Shared.Verbs;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
@@ -23,12 +24,14 @@ public sealed partial class HereticAdminVerbSystem : EntitySystem
     {
         if (!_admin.IsAdmin(args.User))
             return;
+        if (HasComp<HereticComponent>(ent))
+            return;
 
         var session = ent.Comp.PlayerSession;
         args.Verbs.Add(new Verb
         {
             Text = "Make Heretic",
-            Icon = new SpriteSpecifier.Rsi(new ("/Textures/_Wega/Heretic/abilities_heretic.rsi"), "mansus_grasp"),
+            Icon = new SpriteSpecifier.Rsi(new("/Textures/_Wega/Heretic/abilities_heretic.rsi"), "mansus_grasp"),
             Category = VerbCategory.Antag,
             Act = () => _antag.ForceMakeAntag<HereticRuleComponent>(session, "Heretic"),
             Impact = LogImpact.High,

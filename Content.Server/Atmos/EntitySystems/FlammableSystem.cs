@@ -3,6 +3,7 @@ using Content.Server.Atmos.Components;
 using Content.Server.Stunnable;
 using Content.Server.Temperature.Systems;
 using Content.Server.Damage.Components;
+using Content.Shared._Wega.Atmos;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Alert;
 using Content.Shared.Atmos;
@@ -83,8 +84,11 @@ namespace Content.Server.Atmos.EntitySystems
 
         private void OnExtinguishEvent(Entity<FlammableComponent> ent, ref ExtinguishEvent args)
         {
-            // You know I'm really not sure if having AdjustFireStacks *after* Extinguish,
-            // but I'm just moving this code, not questioning it.
+            var attemptEv = new FireExtinguishAttemptEvent(ent, args.FireStacksAdjustment); // Corvax-Wega-Heretic
+            RaiseLocalEvent(ent, ref attemptEv); // Corvax-Wega-Heretic
+            if (attemptEv.Handled) // Corvax-Wega-Heretic
+                return; // Corvax-Wega-Heretic
+
             Extinguish(ent, ent.Comp);
             AdjustFireStacks(ent, args.FireStacksAdjustment, ent.Comp);
         }
@@ -446,8 +450,14 @@ namespace Content.Server.Atmos.EntitySystems
                     // If we're in an oxygenless environment, put the fire out.
                     if (air == null || air.GetMoles(Gas.Oxygen) < 1f)
                     {
-                        Extinguish(uid, flammable);
-                        continue;
+                        var vacEv = new VacuumExtinguishAttemptEvent(); // Corvax-Wega-Heretic
+                        RaiseLocalEvent(uid, ref vacEv); // Corvax-Wega-Heretic
+                        if (!vacEv.Handled) // Corvax-Wega-Heretic
+                        {
+                            Extinguish(uid, flammable);
+                            continue;
+                        }
+                        // Corvax-Wega-Heretic: еретик горит в вакууме — падаем ниже к ускоренному спаду
                     }
 
                     var source = EnsureComp<IgnitionSourceComponent>(uid);

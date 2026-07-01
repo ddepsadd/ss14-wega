@@ -34,7 +34,7 @@
   - type: Action
     icon:
       sprite: _Wega/Heretic/abilities_heretic.rsi
-      state: mansus_grasp
+      state: volcano_blast
     useDelay: 20
   - type: InstantAction
     event: !type:HereticAshExplosionEvent
@@ -49,4 +49,4 @@
   - type: Action
     useDelay: 1
     icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: mansus_grasp }
-    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashlord_rite1 }
+    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashlord_rite }
