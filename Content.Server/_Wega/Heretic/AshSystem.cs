@@ -7,6 +7,8 @@ using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
+using Content.Shared.Charges.Components;
+using Content.Shared.Charges.Systems;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
@@ -17,13 +19,17 @@ using Content.Shared.Heretic.Components;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Systems;
+using Content.Shared.Polymorph;
 using Content.Shared.Popups;
+using Content.Shared.Stunnable;
 using Content.Shared.Temperature;
 using Content.Shared.Temperature.Components;
+using Content.Shared.Throwing;
 using Content.Shared.Toggleable;
 using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Components;
 using Content.Shared.Weapons.Melee.Events;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Prototypes;
 
@@ -43,6 +49,10 @@ public sealed class AshSystem : EntitySystem
     [Dependency] private readonly TemperatureSystem _temperature = default!;
     [Dependency] private readonly SharedActionsSystem _actions = default!;
     [Dependency] private readonly PolymorphSystem _polymorph = default!;
+    [Dependency] private readonly ThrowingSystem _throwing = default!;
+    [Dependency] private readonly SharedStunSystem _stun = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly SharedChargesSystem _charges = default!;
 
     private const float GraspFireStacks = 3f;
     private const float FlamesFireStacks = 2f;
@@ -83,6 +93,14 @@ public sealed class AshSystem : EntitySystem
 
     private const float JauntFireStacks = 3f;
     private const float JauntIgniteRange = 1.5f;
+    private const float JauntExitRange = 2.5f;
+    private const float JauntExitBurn = 20f;
+    private const float JauntExitBlunt = 10f;
+    private const float JauntExitFireStacks = 2f;
+    private const float JauntExitThrowSpeed = 6f;
+    private const float JauntExitKnockdown = 2f;
+
+    private const int MantleShiftCharges = 2;
 
     private static readonly ProtoId<DamageTypePrototype> HeatType = "Heat";
     private readonly Dictionary<EntityUid, float> _mantleAccumulator = new();
@@ -103,6 +121,7 @@ public sealed class AshSystem : EntitySystem
         SubscribeLocalEvent<HereticComponent, FireExtinguishAttemptEvent>(OnExtinguishAttempt);
         SubscribeLocalEvent<HereticComponent, VacuumExtinguishAttemptEvent>(OnVacuumExtinguish);
         SubscribeLocalEvent<HereticComponent, HereticAshShiftEvent>(OnAshShift);
+        SubscribeLocalEvent<HereticComponent, PolymorphedEvent>(OnHereticPolymorphed);
     }
 
     public override void Update(float frameTime)
@@ -365,6 +384,14 @@ public sealed class AshSystem : EntitySystem
         if (!_knowledge.HasKnowledge(uid, "HereticAshShift"))
             return;
 
+        if (_knowledge.HasKnowledge(uid, "HereticAshMantle")
+            && TryComp<LimitedChargesComponent>(args.Action, out var charges)
+            && charges.MaxCharges < MantleShiftCharges)
+        {
+            _charges.SetMaxCharges(args.Action.Owner, MantleShiftCharges);
+            _charges.AddCharges(args.Action.Owner, 1);
+        }
+
         var form = _polymorph.PolymorphEntity(uid, "AshJaunt");
         if (form == null)
             return;
@@ -372,16 +399,47 @@ public sealed class AshSystem : EntitySystem
         args.Handled = true;
     }
 
-    private void OnJauntCollide(EntityUid uid, HereticAshJauntFormComponent comp, ref StartCollideEvent args)
+    private void OnHereticPolymorphed(EntityUid uid, HereticComponent comp, ref PolymorphedEvent args)
     {
-        var other = args.OtherEntity;
-        if (!HasComp<MobStateComponent>(other) || HasComp<HereticComponent>(other))
-            return;
-        if (_mobState.IsDead(other))
-            return;
+        if (!args.IsRevert)
+            return;                                          // только выход из формы
+        if (!HasComp<HereticAshJauntFormComponent>(args.OldEntity))
+            return;                                          // только из джонт-формы
+        if (!_knowledge.HasKnowledge(uid, "HereticAshMantle"))
+            return;                                          // только Мантия
 
-        _flammable.AdjustFireStacks(other, JauntFireStacks, ignite: true);
-        MarkBurnVictim(other);
+        var coords = Transform(uid).Coordinates;
+        var eretPos = _transform.GetWorldPosition(uid);
+
+        foreach (var other in _lookup.GetEntitiesInRange<MobStateComponent>(coords, JauntExitRange))
+        {
+            if (other.Owner == uid || HasComp<HereticComponent>(other))
+                continue;
+
+            var isDead = _mobState.IsDead(other.Owner);
+
+            if (!isDead)
+            {
+                var dmg = new DamageSpecifier();
+                dmg.DamageDict["Heat"] = FixedPoint2.New(JauntExitBurn);
+                dmg.DamageDict["Blunt"] = FixedPoint2.New(JauntExitBlunt);
+                _damage.TryChangeDamage(other.Owner, dmg, true);
+
+                _flammable.AdjustFireStacks(other.Owner, JauntExitFireStacks, ignite: true);
+                MarkBurnVictim(other.Owner);
+            }
+
+            var targetPos = _transform.GetWorldPosition(other.Owner);
+            var dir = targetPos - eretPos;
+            if (dir.LengthSquared() > 0.01f
+                && TryComp<PhysicsComponent>(other.Owner, out var phys)
+                && TryComp<TransformComponent>(other.Owner, out var xform))
+            {
+                _throwing.TryThrow(other.Owner, dir, phys, xform, JauntExitThrowSpeed, uid);
+            }
+
+            _stun.TryKnockdown(other.Owner, TimeSpan.FromSeconds(JauntExitKnockdown), true, true, true);
+        }
     }
 
     private void OnMeleeHit(EntityUid weapon, MeleeWeaponComponent comp, MeleeHitEvent args)
