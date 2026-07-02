@@ -39,7 +39,7 @@ namespace Content.Client.Actions
         public event Action<EntityUid>? OnActionRemoved;
         public event Action? ActionsUpdated;
         public event Action<ActionsComponent>? LinkActions;
-        public event Action? UnlinkActions;
+        public event Action<EntityUid?>? UnlinkActions; // Corvax-Wega-HotbarPersist
         public event Action? ClearAssignments;
         public event Action<List<SlotAssignment>>? AssignSlot;
 
@@ -170,12 +170,11 @@ namespace Content.Client.Actions
 
         private void OnPlayerDetached(EntityUid uid, ActionsComponent component, LocalPlayerDetachedEvent? args = null)
         {
-            UnlinkAllActions();
+            UnlinkAllActions(uid); // Corvax-Wega-HotbarPersist
         }
-
-        public void UnlinkAllActions()
+        public void UnlinkAllActions(EntityUid? user = null) // Corvax-Wega-HotbarPersist
         {
-            UnlinkActions?.Invoke();
+            UnlinkActions?.Invoke(user);
         }
 
         public void LinkAllActions(ActionsComponent? actions = null)

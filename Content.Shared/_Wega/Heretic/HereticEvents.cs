@@ -66,3 +66,5 @@ public sealed partial class HereticBuyKnowledgeMessage(ProtoId<HereticKnowledgeP
 public sealed class HereticStoreCloseMessage : EuiMessageBase
 {
 }
+
+public sealed partial class HereticAshShiftEvent : InstantActionEvent;

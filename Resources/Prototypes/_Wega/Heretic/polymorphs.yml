@@ -1,0 +1,8 @@
+- type: polymorph
+  id: AshJaunt
+  configuration:
+    entity: PolymorphAshJaunt
+    forced: true
+    duration: 3
+    attachToGridOrMap: true
+    showPopup: false

@@ -1,0 +1,17 @@
+- type: entity
+  name: ash jaunt
+  parent: BaseMobJaunt
+  id: PolymorphAshJaunt
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _Wega/Heretic/polymorphs.rsi
+    layers:
+    - state: ash_jaunt
+      shader: unshaded
+    noRot: true
+    drawdepth: Ghosts
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 5
+    baseSprintSpeed: 6
+  - type: HereticAshJauntForm

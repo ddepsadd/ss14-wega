@@ -36,3 +36,13 @@
   actions: [ ActionHereticAshFury ]
   components:
   - type: HereticFury
+
+- type: hereticKnowledge
+  id: HereticAshShift
+  name: heretic-know-ashshift-name
+  description: heretic-know-ashshift-desc
+  path: Ash
+  stage: 4
+  cost: 2
+  prerequisites: [ HereticAshFlames ]
+  actions: [ ActionHereticAshShift ]

@@ -27,6 +27,7 @@ using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.GameObjects;
 using static Content.Client.Actions.ActionsSystem;
 using static Content.Client.UserInterface.Systems.Actions.Windows.ActionsWindow;
 using static Robust.Client.UserInterface.Control;
@@ -52,6 +53,7 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
     [UISystemDependency] private readonly SpriteSystem _spriteSystem = default!;
 
     private ActionButtonContainer? _container;
+    private readonly Dictionary<NetEntity, List<NetEntity?>> _savedLayouts = new(); // Corvax-Wega-HotbarPersist
     private readonly List<EntityUid?> _actions = new();
     private readonly DragDropHelper<ActionButton> _menuDragHelper;
     private readonly TextureRect _dragShadow;
@@ -226,6 +228,7 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             _actionsSystem.OnActionAdded -= OnActionAdded;
             _actionsSystem.OnActionRemoved -= OnActionRemoved;
             _actionsSystem.ActionsUpdated -= OnActionsUpdated;
+            _savedLayouts.Clear(); // Corvax-Wega-HotbarPersist
         }
 
         CommandBinds.Unregister<ActionUIController>();
@@ -258,6 +261,19 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
 
         if (_actions.Contains(action))
             return;
+
+        if (TryGetSavedSlot(action, out var slot)) // Corvax-Wega-HotbarPersist
+        {
+            while (_actions.Count <= slot)
+                _actions.Add(null);
+            if (_actions[slot] == null)
+            {
+                _actions[slot] = action;
+                if (_actionsSystem != null)
+                    _container?.SetActionData(_actionsSystem, _actions.ToArray());
+                return;
+            }
+        }
 
         _actions.Add(action);
     }
@@ -739,18 +755,76 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             SearchAndDisplay();
     }
 
+    private bool TryGetSavedSlot(EntityUid action, out int slot) // Corvax-Wega-HotbarPersist
+    {
+        slot = -1;
+        if (_playerManager.LocalEntity is not { } user ||
+            !EntityManager.TryGetNetEntity(user, out var userNet) ||
+            !EntityManager.TryGetNetEntity(action, out var actionNet))
+            return false;
+        if (!_savedLayouts.TryGetValue(userNet.Value, out var layout))
+            return false;
+        slot = layout.IndexOf(actionNet.Value);
+        return slot >= 0;
+    }
+
+    private void SaveLayout(EntityUid user) // Corvax-Wega-HotbarPersist
+    {
+        if (!EntityManager.TryGetNetEntity(user, out var userNet))
+            return;
+        var layout = new List<NetEntity?>();
+        var any = false;
+        foreach (var actionId in _actions)
+        {
+            if (actionId != null && EntityManager.TryGetNetEntity(actionId.Value, out var net))
+            {
+                layout.Add(net);
+                any = true;
+            }
+            else
+                layout.Add(null);
+        }
+        if (any)
+            _savedLayouts[userNet.Value] = layout;
+    }
+
+    private bool TryRestoreSavedLayout() // Corvax-Wega-HotbarPersist
+    {
+        if (_actionsSystem == null || _playerManager.LocalEntity is not { } user)
+            return false;
+        if (!EntityManager.TryGetNetEntity(user, out var userNet) ||
+            !_savedLayouts.TryGetValue(userNet.Value, out var layout))
+            return false;
+
+        _actions.Clear();
+        foreach (var net in layout)
+        {
+            if (net != null &&
+                EntityManager.TryGetEntity(net, out var uid) &&
+                _actionsSystem.GetAction(uid) != null)
+            {
+                _actions.Add(uid);
+            }
+            else
+                _actions.Add(null);
+        }
+        return true;
+    }
+
     private void OnComponentLinked(ActionsComponent component)
     {
         if (_actionsSystem == null)
             return;
-
-        LoadDefaultActions();
+        if (!TryRestoreSavedLayout()) // Corvax-Wega-HotbarPersist
+            LoadDefaultActions();
         _container?.SetActionData(_actionsSystem, _actions.ToArray());
         QueueWindowUpdate();
     }
 
-    private void OnComponentUnlinked()
+    private void OnComponentUnlinked(EntityUid? user) // Corvax-Wega-HotbarPersist
     {
+        if (user != null)
+            SaveLayout(user.Value); // Corvax-Wega-HotbarPersist
         _container?.ClearActionData();
         QueueWindowUpdate();
         StopTargeting();

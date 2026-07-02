@@ -50,3 +50,17 @@
     useDelay: 1
     icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: mansus_grasp }
     iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashlord_rite }
+
+- type: entity
+  id: ActionHereticAshShift
+  name: "[color=#9b59b6]Пепельный сдвиг[/color]"
+  description: "Обратись в пепел и пламя, пройди сквозь стены, поджигая всё на пути."
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Action
+    icon:
+      sprite: _Wega/Heretic/abilities_heretic.rsi
+      state: ashen_shift
+    useDelay: 20
+  - type: InstantAction
+    event: !type:HereticAshShiftEvent
