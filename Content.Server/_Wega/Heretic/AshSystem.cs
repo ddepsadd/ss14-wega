@@ -120,8 +120,8 @@ public sealed class AshSystem : EntitySystem
         SubscribeLocalEvent<HereticBurnVictimComponent, DamageChangedEvent>(OnVictimDamage);
         SubscribeLocalEvent<HereticComponent, FireExtinguishAttemptEvent>(OnExtinguishAttempt);
         SubscribeLocalEvent<HereticComponent, VacuumExtinguishAttemptEvent>(OnVacuumExtinguish);
-        SubscribeLocalEvent<HereticComponent, HereticAshShiftEvent>(OnAshShift);
         SubscribeLocalEvent<HereticComponent, PolymorphedEvent>(OnHereticPolymorphed);
+        SubscribeLocalEvent<HereticComponent, HereticNodePurchasedEvent>(OnNodePurchased);
     }
 
     public override void Update(float frameTime)
@@ -314,7 +314,7 @@ public sealed class AshSystem : EntitySystem
     {
         if (!TryComp<DamageableComponent>(uid, out var dmg))
             return 0f;
-        var all = _damage.GetAllDamage((uid, dmg));   // легально, RA0002-free
+        var all = _damage.GetAllDamage((uid, dmg));
         return all.DamageDict.GetValueOrDefault(HeatType).Float();
     }
 
@@ -377,36 +377,32 @@ public sealed class AshSystem : EntitySystem
         }
     }
 
-    private void OnAshShift(EntityUid uid, HereticComponent comp, HereticAshShiftEvent args)
+    private void OnNodePurchased(EntityUid uid, HereticComponent comp, ref HereticNodePurchasedEvent args)
     {
-        if (args.Handled)
+        if (args.Node != "HereticAshMantle" && args.Node != "HereticAshShift")
             return;
-        if (!_knowledge.HasKnowledge(uid, "HereticAshShift"))
+        if (!_knowledge.HasKnowledge(uid, "HereticAshMantle")
+            || !_knowledge.HasKnowledge(uid, "HereticAshShift"))
             return;
 
-        if (_knowledge.HasKnowledge(uid, "HereticAshMantle")
-            && TryComp<LimitedChargesComponent>(args.Action, out var charges)
-            && charges.MaxCharges < MantleShiftCharges)
+        foreach (var action in _actions.GetActions(uid))
         {
-            _charges.SetMaxCharges(args.Action.Owner, MantleShiftCharges);
-            _charges.AddCharges(args.Action.Owner, 1);
+            if (MetaData(action).EntityPrototype?.ID != "ActionHereticAshShift")
+                continue;
+
+            _charges.SetMaxCharges(action.Owner, MantleShiftCharges);
+            _charges.AddCharges(action.Owner, 1);
+            break;
         }
-
-        var form = _polymorph.PolymorphEntity(uid, "AshJaunt");
-        if (form == null)
-            return;
-
-        args.Handled = true;
     }
-
     private void OnHereticPolymorphed(EntityUid uid, HereticComponent comp, ref PolymorphedEvent args)
     {
         if (!args.IsRevert)
-            return;                                          // только выход из формы
+            return;
         if (!HasComp<HereticAshJauntFormComponent>(args.OldEntity))
-            return;                                          // только из джонт-формы
+            return;
         if (!_knowledge.HasKnowledge(uid, "HereticAshMantle"))
-            return;                                          // только Мантия
+            return;
 
         var coords = Transform(uid).Coordinates;
         var eretPos = _transform.GetWorldPosition(uid);
@@ -454,7 +450,7 @@ public sealed class AshSystem : EntitySystem
         if (available <= 0)
             return;
 
-        var realRate = _melee.GetAttackRate(weapon, user, comp);   // уже с баффами Ярости
+        var realRate = _melee.GetAttackRate(weapon, user, comp);
         var portion = Math.Clamp(FuryTransferBase / realRate, FuryTransferMin, FuryTransferMax);
 
         var hitMob = false;
