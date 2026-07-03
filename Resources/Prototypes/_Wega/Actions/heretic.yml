@@ -52,19 +52,16 @@
     iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashlord_rite1 }
 
 - type: entity
+  parent: BaseAction
   id: ActionHereticAshShift
   name: "[color=#9b59b6]Пепельный сдвиг[/color]"
-  description: "Обратись в пепел и пламя, пройди сквозь стены, поджигая всё на пути."
+  description: "Обратись в пепел и пламя, пройди сквозь стены."
   categories: [ HideSpawnMenu ]
   components:
   - type: Action
     icon:
       sprite: _Wega/Heretic/abilities_heretic.rsi
       state: ashen_shift
-    useDelay: 3
-  - type: LimitedCharges
-    maxCharges: 1
-  - type: AutoRecharge
-    rechargeDuration: 20
+    useDelay: 20
   - type: InstantAction
     event: !type:HereticAshShiftEvent

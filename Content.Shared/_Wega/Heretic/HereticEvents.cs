@@ -68,3 +68,5 @@ public sealed class HereticStoreCloseMessage : EuiMessageBase
 }
 
 public sealed partial class HereticAshShiftEvent : InstantActionEvent;
+
+public sealed partial class HereticAshShiftExplodeEvent : InstantActionEvent { }

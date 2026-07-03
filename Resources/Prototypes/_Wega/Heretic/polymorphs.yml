@@ -6,3 +6,12 @@
     duration: 3
     attachToGridOrMap: true
     showPopup: false
+
+- type: polymorph
+  id: AshJauntMantle
+  configuration:
+    entity: PolymorphAshJauntMantle
+    forced: true
+    duration: 5
+    attachToGridOrMap: true
+    showPopup: false

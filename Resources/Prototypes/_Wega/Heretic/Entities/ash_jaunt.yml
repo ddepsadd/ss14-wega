@@ -15,3 +15,15 @@
     baseWalkSpeed: 5
     baseSprintSpeed: 6
   - type: HereticAshJauntForm
+    fireStacks: 0
+
+- type: entity
+  name: ash jaunt
+  parent: PolymorphAshJaunt
+  id: PolymorphAshJauntMantle
+  components:
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 6
+    baseSprintSpeed: 7
+  - type: HereticAshJauntForm
+    fireStacks: 3
