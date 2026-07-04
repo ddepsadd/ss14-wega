@@ -48,8 +48,20 @@
   components:
   - type: Action
     useDelay: 1
-    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: mansus_grasp }
-    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashlord_rite1 }
+    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashen_rage0 }
+    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashen_rage1 }
+
+- type: entity
+  parent: BaseToggleAction
+  id: ActionHereticAshMantle
+  name: "[color=#9b59b6]Мантия пепла[/color]"
+  description: "Ускорься, преломляя свет пеплом."
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Action
+    useDelay: 1
+    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
+    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
 
 - type: entity
   parent: BaseAction

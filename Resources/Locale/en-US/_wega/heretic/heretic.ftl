@@ -38,3 +38,9 @@ heretic-know-ashflames-tooltip = Releases a ring of flame around you.
     {"["}color=#ECC76E]Radius[/color]  3 tiles
     {"["}color=#ECC76E]Fire[/color]  +5 burn damage
     {"["}color=#ECC76E]Cooldown[/color]  30 sec
+
+heretic-mantle-cloak-on = Cloak of Mantle is on.
+heretic-mantle-cloak-off = Cloak of Mantle is off.
+
+heretic-fury-on = Fury of Ash is on.
+heretic-fury-off = Fury of Ash is off.

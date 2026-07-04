@@ -38,3 +38,9 @@ heretic-know-ashflames-tooltip = Выброс пламени по кольцу �
     {"["}color=#ECC76E]Радиус[/color]  3 тайла
     {"["}color=#ECC76E]Огонь[/color]  +5 ожогов
     {"["}color=#ECC76E]Перезарядка[/color]  30 сек
+
+heretic-mantle-cloak-on = Мантия включена.
+heretic-mantle-cloak-off = Мантия выключена.
+
+heretic-fury-on = Ярость включена.
+heretic-fury-off = Ярость выключена.

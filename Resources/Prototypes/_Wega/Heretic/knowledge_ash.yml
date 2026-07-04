@@ -24,6 +24,13 @@
   stage: 3
   cost: 3
   conflictsWith: [ HereticAshFury ]
+  actions: [ActionHereticAshMantle]
+  components:
+    - type: HereticMantle
+    - type: PressureImmunity
+    - type: StaminaResistance
+      damageCoefficient: 0.5
+      worn: false
 
 - type: hereticKnowledge
   id: HereticAshFury
