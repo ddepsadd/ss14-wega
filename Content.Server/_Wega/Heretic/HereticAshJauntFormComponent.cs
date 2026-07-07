@@ -4,5 +4,5 @@ namespace Content.Server.Heretic;
 public sealed partial class HereticAshJauntFormComponent : Component
 {
     [DataField]
-    public float FireStacks;
+    public bool MantleAura;
 }

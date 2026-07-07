@@ -155,3 +155,8 @@
   id: NullDamage
   kind: source
   path: "/Textures/_Wega/Shaders/nulldamage.swsl"
+
+- type: shader
+  id: AshBlind
+  kind: source
+  path: "/Textures/_Wega/Shaders/ashblind.swsl"

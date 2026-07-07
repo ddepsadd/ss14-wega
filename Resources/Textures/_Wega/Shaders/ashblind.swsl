@@ -1,0 +1,37 @@
+uniform sampler2D SCREEN_TEXTURE;
+uniform highp float intensity;
+
+highp float cellRand(highp vec2 c, highp float salt) {
+    return zRandom(c + vec2(salt, salt * 0.7)).x;
+}
+
+void fragment() {
+    highp vec3 scene = texture(SCREEN_TEXTURE, UV).rgb;
+
+    const highp float GX = 46.0;
+    const highp float GY = 26.0;
+    highp vec2 cell = floor(vec2(UV.x * GX, UV.y * GY));
+
+    highp vec2 e = abs(UV - vec2(0.5)) * 2.0;
+    highp float edge = max(e.x, e.y);
+
+    highp float centerness = 1.0 - edge;
+
+    highp float thresh = cellRand(cell, 4.4) * 0.4 + centerness * 0.35;
+    highp float appear = smoothstep(thresh, thresh + 0.25, intensity);
+
+    highp float g1 = cellRand(floor(vec2(UV.x * GX * 3.0, UV.y * GY * 3.0)), 2.2);
+    highp float g2 = cellRand(floor(vec2(UV.x * GX * 6.0, UV.y * GY * 6.0)), 5.1);
+    highp float grain = g1 * 0.6 + g2 * 0.4;
+
+    highp float cr = cellRand(cell, 3.1);
+    highp vec3 col = mix(vec3(0.18, 0.18, 0.20), vec3(0.34, 0.33, 0.32), smoothstep(0.0, 0.33, cr));
+    col = mix(col, vec3(0.52, 0.50, 0.47), smoothstep(0.33, 0.66, cr));
+    col = mix(col, vec3(0.68, 0.65, 0.60), smoothstep(0.66, 1.0, cr));
+    col = mix(col, vec3(0.45, 0.28, 0.16), step(0.92, cellRand(cell, 11.0)));
+    col *= 0.7 + grain * 0.6;
+
+    highp float alpha = clamp(appear * (1.0 + grain * 0.2), 0.0, 1.0) * smoothstep(0.0, 0.25, intensity);
+
+    COLOR = vec4(mix(scene, col, alpha), 1.0);
+}

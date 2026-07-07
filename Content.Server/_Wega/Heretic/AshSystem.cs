@@ -1,11 +1,10 @@
-using Content.Server.Atmos.Components;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Body.Components;
+using Content.Server.Damage.Systems;
 using Content.Server.Polymorph.Systems;
 using Content.Server.Temperature.Systems;
-using Content.Shared._Wega.Atmos;
+using Content.Shared._Wega.Heretic;
 using Content.Shared.Actions;
-using Content.Shared.Actions.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Damage;
@@ -18,20 +17,14 @@ using Content.Shared.Heretic.Components;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Systems;
-using Content.Shared.Polymorph;
 using Content.Shared.Popups;
 using Content.Shared.Stealth;
 using Content.Shared.Stealth.Components;
-using Content.Shared.Stunnable;
 using Content.Shared.Temperature;
 using Content.Shared.Temperature.Components;
-using Content.Shared.Throwing;
 using Content.Shared.Toggleable;
 using Content.Shared.Weapons.Melee;
-using Content.Shared.Weapons.Melee.Components;
 using Content.Shared.Weapons.Melee.Events;
-using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Events;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -54,6 +47,7 @@ public sealed class AshSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedStealthSystem _stealth = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly StaminaSystem _stamina = default!;
 
     private const float GraspFireStacks = 1f;
     private const float FlamesFireStacks = 2f;
@@ -77,7 +71,11 @@ public sealed class AshSystem : EntitySystem
     private const float SafeTemp = 350f;
     private const float GibFadeRate = 3f;
 
-    private const float JauntIgniteRange = 1.5f;
+    private const float JauntBlindRange = 3f;
+    private const float JauntBlindRampSeconds = 1.0f;
+    private const float JauntBlindRefresh = 2.0f;
+    private const float JauntBlindFadeSeconds = 5f;
+    private const float JauntStaminaPerSecond = 10f;
     private const float MantleShiftCooldown = 15f;
 
     private const float BloodthornSeconds = 3f;
@@ -86,6 +84,7 @@ public sealed class AshSystem : EntitySystem
     private static readonly ProtoId<DamageTypePrototype> HeatType = "Heat";
     private readonly Dictionary<EntityUid, float> _mantleAccumulator = new();
     private readonly List<EntityUid> _bloodthornRemove = new();
+    private readonly List<EntityUid> _ashBlindRemove = new();
 
     public override void Initialize()
     {
@@ -102,7 +101,6 @@ public sealed class AshSystem : EntitySystem
         SubscribeLocalEvent<HereticBurnVictimComponent, DamageChangedEvent>(OnVictimDamage);
         SubscribeLocalEvent<HereticComponent, HereticNodePurchasedEvent>(OnNodePurchased);
         SubscribeLocalEvent<HereticComponent, HereticAshShiftEvent>(OnAshShift);
-        SubscribeLocalEvent<HereticAshJauntFormComponent, HereticAshShiftExplodeEvent>(OnAshShiftExplode);
         SubscribeLocalEvent<HereticMantleComponent, ComponentInit>(OnMantleInit);
         SubscribeLocalEvent<HereticMantleComponent, ComponentShutdown>(OnMantleShutdown);
         SubscribeLocalEvent<HereticMantleComponent, ToggleActionEvent>(OnMantleToggle);
@@ -128,23 +126,48 @@ public sealed class AshSystem : EntitySystem
         var query = EntityQueryEnumerator<HereticAshJauntFormComponent>();
         while (query.MoveNext(out var formUid, out var jauntForm))
         {
-            if (jauntForm.FireStacks <= 0)
-                continue;
-
             var coords = Transform(formUid).Coordinates;
-            foreach (var other in _lookup.GetEntitiesInRange<MobStateComponent>(coords, JauntIgniteRange))
-            {
-                if (HasComp<HereticComponent>(other))
-                    continue;
-                if (_mobState.IsDead(other))
-                    continue;
-                if (HasComp<HereticBurnVictimComponent>(other))
-                    continue;
 
-                _flammable.AdjustFireStacks(other, jauntForm.FireStacks, ignite: true);
-                MarkBurnVictim(other);
+            if (jauntForm.MantleAura)
+            {
+                foreach (var other in _lookup.GetEntitiesInRange<MobStateComponent>(coords, JauntBlindRange))
+                {
+                    if (other.Owner == formUid)
+                        continue;
+                    if (HasComp<HereticComponent>(other))
+                        continue;
+                    if (_mobState.IsDead(other))
+                        continue;
+
+                    _stamina.TakeStaminaDamage(other, JauntStaminaPerSecond * frameTime, source: formUid, visual: false);
+
+                    var blind = EnsureComp<HereticAshBlindnessComponent>(other);
+                    blind.Intensity = MathF.Min(1f, blind.Intensity + frameTime / JauntBlindRampSeconds);
+                    blind.ExpireAt = _timing.CurTime + TimeSpan.FromSeconds(JauntBlindRefresh);
+                    Dirty(other, blind);
+                }
             }
         }
+
+        var blindQuery = EntityQueryEnumerator<HereticAshBlindnessComponent>();
+        while (blindQuery.MoveNext(out var buid, out var blind))
+        {
+            if (_timing.CurTime <= blind.ExpireAt)
+                continue;
+            blind.Intensity -= frameTime / JauntBlindFadeSeconds;
+            if (blind.Intensity <= 0f)
+            {
+                blind.Intensity = 0f;
+                Dirty(buid, blind);
+                _ashBlindRemove.Add(buid);
+            }
+            else
+                Dirty(buid, blind);
+        }
+        foreach (var u in _ashBlindRemove)
+            RemComp<HereticAshBlindnessComponent>(u);
+        _ashBlindRemove.Clear();
+
         var revealQuery = EntityQueryEnumerator<HereticMantleComponent>();
         while (revealQuery.MoveNext(out var uid, out var mantle))
         {
@@ -416,15 +439,6 @@ public sealed class AshSystem : EntitySystem
             return;
 
         args.Handled = true;
-    }
-
-    private void OnAshShiftExplode(EntityUid uid, HereticAshJauntFormComponent comp, HereticAshShiftExplodeEvent args)
-    {
-        if (args.Handled)
-            return;
-        args.Handled = true;
-
-        _polymorph.Revert((uid, null));
     }
 
     private void OnMeleeHit(EntityUid weapon, MeleeWeaponComponent comp, MeleeHitEvent args)
