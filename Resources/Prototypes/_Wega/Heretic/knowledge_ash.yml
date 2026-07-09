@@ -23,8 +23,8 @@
   path: Ash
   stage: 3
   cost: 3
-  conflictsWith: [ HereticAshFury ]
-  actions: [ActionHereticAshMantle]
+  conflictsWith: [ HereticAshFury, HereticAshMask ]
+  actions: [ ActionHereticAshMantle ]
   components:
     - type: HereticMantle
     - type: PressureImmunity
@@ -39,10 +39,22 @@
   path: Ash
   stage: 3
   cost: 3
-  conflictsWith: [ HereticAshMantle ]
+  conflictsWith: [ HereticAshMantle, HereticAshMask]
   actions: [ ActionHereticAshFury ]
   components:
   - type: HereticFury
+
+- type: hereticKnowledge
+  id: HereticAshMask
+  name: heretic-know-ashmask-name
+  description: heretic-know-ashmask-desc
+  path: Ash
+  stage: 3
+  cost: 3
+  conflictsWith: [ HereticAshMantle, HereticAshFury ]
+  actions: [ ActionHereticAshMask ]
+  components:
+  - type: HereticMask
 
 - type: hereticKnowledge
   id: HereticAshShift

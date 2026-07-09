@@ -14,6 +14,8 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Heretic;
 using Content.Shared.Heretic.Components;
+using Content.Shared.IdentityManagement;
+using Content.Shared.IdentityManagement.Components;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Systems;
@@ -48,6 +50,7 @@ public sealed class AshSystem : EntitySystem
     [Dependency] private readonly SharedStealthSystem _stealth = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly StaminaSystem _stamina = default!;
+    [Dependency] private readonly IdentitySystem _identity = default!;
 
     private const float GraspFireStacks = 1f;
     private const float FlamesFireStacks = 2f;
@@ -64,6 +67,8 @@ public sealed class AshSystem : EntitySystem
     private const float MantleSpeedBase = 1.2f;
     private const float MantleRevealSeconds = 3f;
     private const float MantleVisibility = 0.2f;
+
+    private const float MaskSpeedBase = 1.2f;
 
     private const float GibThreshold = 1500f;
     private const float GibBuffer = 35f;
@@ -105,6 +110,7 @@ public sealed class AshSystem : EntitySystem
         SubscribeLocalEvent<HereticMantleComponent, ComponentShutdown>(OnMantleShutdown);
         SubscribeLocalEvent<HereticMantleComponent, ToggleActionEvent>(OnMantleToggle);
         SubscribeLocalEvent<HereticBloodthornComponent, DamageChangedEvent>(OnBloodthornDamage);
+        SubscribeLocalEvent<HereticMaskComponent, ToggleActionEvent>(OnMaskToggle);
     }
 
     public override void Update(float frameTime)
@@ -253,6 +259,29 @@ public sealed class AshSystem : EntitySystem
         _popup.PopupEntity(Loc.GetString(msg), uid, uid);
     }
 
+    private void OnMaskToggle(EntityUid uid, HereticMaskComponent comp, ref ToggleActionEvent args)
+    {
+        if (args.Handled)
+            return;
+        args.Handled = true;
+
+        comp.Active = !comp.Active;
+        _actions.SetToggled((args.Action, null), comp.Active);
+        _movement.RefreshMovementSpeedModifiers(uid);
+        if (comp.Active)
+        {
+            EnsureComp<IdentityBlockerComponent>(uid);
+        }
+        else
+        {
+            RemComp<IdentityBlockerComponent>(uid);
+        }
+
+        _identity.QueueIdentityUpdate(uid);
+        var msg = comp.Active ? "heretic-mask-on" : "heretic-mask-off";
+        _popup.PopupEntity(Loc.GetString(msg), uid, uid);
+    }
+
     private void TickMantleHeal(EntityUid uid, float frameTime)
     {
         if (!_mobState.IsAlive(uid))
@@ -343,6 +372,11 @@ public sealed class AshSystem : EntitySystem
         if (TryComp<HereticMantleComponent>(uid, out var mantle) && mantle.Active)
         {
             args.ModifySpeed(MantleSpeedBase);
+        }
+
+        if (TryComp<HereticMaskComponent>(uid, out var mask) && mask.Active)
+        {
+            args.ModifySpeed(MaskSpeedBase);
         }
     }
 

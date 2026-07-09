@@ -25,6 +25,8 @@ heretic-know-ashmantle-name = Мантия пепла
 heretic-know-ashmantle-desc = Огонь тебя не тронет
 heretic-know-ashfury-name = Ярость пепла
 heretic-know-ashfury-desc = Сила в пламени
+heretic-know-ashmask-name = Маска пепла
+heretic-know-ashmask-desc = Безумие в дыму
 
 admin-verb-make-heretic = Сделать цель еретиком.
 admin-verb-text-make-heretic = Сделать еретиком
@@ -44,3 +46,6 @@ heretic-mantle-cloak-off = Мантия выключена.
 
 heretic-fury-on = Ярость включена.
 heretic-fury-off = Ярость выключена.
+
+heretic-mask-on = Маска надета.
+heretic-mask-off = Маска снята.

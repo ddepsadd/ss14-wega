@@ -25,6 +25,8 @@ heretic-know-ashmantle-name = Ashen Mantle
 heretic-know-ashmantle-desc = Fire will not touch you
 heretic-know-ashfury-name = Fury of Ash
 heretic-know-ashfury-desc = Power in the flames
+heretic-know-ashmask-name = Ashen Mask
+heretic-know-ashmask-desc = Madness in the smoke
 
 admin-verb-make-heretic = Make the target a heretic.
 admin-verb-text-make-heretic = Make Heretic
@@ -44,3 +46,6 @@ heretic-mantle-cloak-off = Cloak of Mantle is off.
 
 heretic-fury-on = Fury of Ash is on.
 heretic-fury-off = Fury of Ash is off.
+
+heretic-mask-on = Mask is on.
+heretic-mask-off = Mask is off.

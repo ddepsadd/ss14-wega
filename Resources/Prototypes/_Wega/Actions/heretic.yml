@@ -64,6 +64,18 @@
     iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
 
 - type: entity
+  parent: BaseToggleAction
+  id: ActionHereticAshMask
+  name: "[color=#9b59b6]Маска пепла[/color]"
+  description: "Источая газ, беги и заставь убегать."
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Action
+    useDelay: 1
+    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
+    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
+
+- type: entity
   parent: BaseAction
   id: ActionHereticAshShift
   name: "[color=#9b59b6]Пепельный сдвиг[/color]"
