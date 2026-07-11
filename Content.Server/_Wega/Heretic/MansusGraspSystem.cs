@@ -38,7 +38,6 @@ public sealed partial class MansusGraspSystem : EntitySystem
         if (args.Handled)
             return;
 
-        // грасп активен → повторное нажатие отменяет
         if (component.ActiveGrasp != EntityUid.Invalid)
         {
             QueueDel(component.ActiveGrasp);
@@ -47,7 +46,6 @@ public sealed partial class MansusGraspSystem : EntitySystem
             return;
         }
 
-        // призыв
         if (TryGiveGrasp(uid, component.MansusGraspProto, out var grasp))
         {
             component.ActiveGrasp = grasp;

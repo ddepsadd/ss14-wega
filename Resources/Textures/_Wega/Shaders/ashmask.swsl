@@ -1,0 +1,26 @@
+uniform sampler2D SCREEN_TEXTURE;
+uniform highp float intensity;
+uniform highp float aspect;
+
+void fragment() {
+    highp vec3 scene = texture(SCREEN_TEXTURE, UV).rgb;
+
+    highp vec2 p = (UV - vec2(0.5)) * vec2(aspect, 1.0);
+    highp float d = length(p / vec2(0.42, 0.26));
+
+    highp float s = zFBM(UV * 3.0 + vec2(TIME * 0.12, TIME * 0.08));
+
+    highp float smokeI = clamp(intensity / 0.75, 0.0, 1.0);
+    highp float redI = clamp(intensity / 0.75, 0.0, 1.0);
+
+    highp float reach = mix(4.0, 1.0, smokeI);
+    highp float cov = smoothstep(reach, reach + 0.4, d + (s - 0.5) * 0.35);
+
+    highp float lum = dot(scene, vec3(0.299, 0.587, 0.114));
+    highp vec3 red = vec3(lum * 1.2 + 0.12, lum * 0.18, lum * 0.14);
+    highp vec3 col = mix(scene, red, redI * 0.6);
+
+    col = mix(col, vec3(0.002), cov);
+
+    COLOR = vec4(col, 1.0);
+}

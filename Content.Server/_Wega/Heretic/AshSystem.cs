@@ -11,6 +11,7 @@ using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Examine;
 using Content.Shared.FixedPoint;
 using Content.Shared.Heretic;
 using Content.Shared.Heretic.Components;
@@ -51,6 +52,7 @@ public sealed class AshSystem : EntitySystem
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly StaminaSystem _stamina = default!;
     [Dependency] private readonly IdentitySystem _identity = default!;
+    [Dependency] private readonly ExamineSystemShared _examine = default!;
 
     private const float GraspFireStacks = 1f;
     private const float FlamesFireStacks = 2f;
@@ -69,6 +71,12 @@ public sealed class AshSystem : EntitySystem
     private const float MantleVisibility = 0.2f;
 
     private const float MaskSpeedBase = 1.2f;
+    private const float MaskAuraRange = 4f;
+    private const float MaskCloseRange = 1.5f;
+    private const float MaskStackMax = 8f;
+    private const float MaskGainPerSec = 1f;
+    private const float MaskGainClose = 2.5f;
+    private const float MaskDecayPerSec = 1f;
 
     private const float GibThreshold = 1500f;
     private const float GibBuffer = 35f;
@@ -90,6 +98,8 @@ public sealed class AshSystem : EntitySystem
     private readonly Dictionary<EntityUid, float> _mantleAccumulator = new();
     private readonly List<EntityUid> _bloodthornRemove = new();
     private readonly List<EntityUid> _ashBlindRemove = new();
+    private readonly HashSet<EntityUid> _maskTouched = new();
+    private readonly List<EntityUid> _maskVictimRemove = new();
 
     public override void Initialize()
     {
@@ -170,8 +180,11 @@ public sealed class AshSystem : EntitySystem
             else
                 Dirty(buid, blind);
         }
+
         foreach (var u in _ashBlindRemove)
+        {
             RemComp<HereticAshBlindnessComponent>(u);
+        }
         _ashBlindRemove.Clear();
 
         var revealQuery = EntityQueryEnumerator<HereticMantleComponent>();
@@ -200,9 +213,56 @@ public sealed class AshSystem : EntitySystem
             }
             _bloodthornRemove.Add(uid);
         }
+
         foreach (var toRemove in _bloodthornRemove)
+        {
             RemComp<HereticBloodthornComponent>(toRemove);
+        }
         _bloodthornRemove.Clear();
+
+        _maskTouched.Clear();
+        var maskQuery = EntityQueryEnumerator<HereticMaskComponent>();
+        while (maskQuery.MoveNext(out var heretic, out var mask))
+        {
+            if (!mask.Active)
+                continue;
+            var coords = Transform(heretic).Coordinates;
+            foreach (var other in _lookup.GetEntitiesInRange<MobStateComponent>(coords, MaskAuraRange))
+            {
+                if (other.Owner == heretic || HasComp<HereticComponent>(other) || _mobState.IsDead(other))
+                    continue;
+                if (!_examine.InRangeUnOccluded(heretic, other, MaskAuraRange))
+                    continue;
+                var gain = MaskGainPerSec;
+                if (coords.TryDistance(EntityManager, Transform(other).Coordinates, out var dist) &&
+                    dist <= MaskCloseRange)
+                    gain = MaskGainClose;
+
+                var victim = EnsureComp<HereticMaskVictimComponent>(other);
+                victim.Stacks = MathF.Min(MaskStackMax, victim.Stacks + gain * frameTime);
+                Dirty(other, victim);
+                _maskTouched.Add(other);
+            }
+        }
+        var victimQuery = EntityQueryEnumerator<HereticMaskVictimComponent>();
+        while (victimQuery.MoveNext(out var vuid, out var victim))
+        {
+            if (_maskTouched.Contains(vuid))
+                continue;
+            victim.Stacks -= MaskDecayPerSec * frameTime;
+            if (victim.Stacks <= 0f)
+            {
+                victim.Stacks = 0f;
+                _maskVictimRemove.Add(vuid);
+            }
+            Dirty(vuid, victim);
+        }
+
+        foreach (var u in _maskVictimRemove)
+        {
+            RemComp<HereticMaskVictimComponent>(u);
+        }
+        _maskVictimRemove.Clear();
     }
 
     private void OnMantleInit(EntityUid uid, HereticMantleComponent comp, ref ComponentInit args)
@@ -299,8 +359,9 @@ public sealed class AshSystem : EntitySystem
 
         var heal = new DamageSpecifier();
         foreach (var type in _proto.EnumeratePrototypes<DamageTypePrototype>())
+        {
             heal.DamageDict[type.ID] = FixedPoint2.New(-rate);
-
+        }
         _damage.TryChangeDamage(uid, heal, true);
     }
 

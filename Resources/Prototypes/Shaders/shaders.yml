@@ -160,3 +160,8 @@
   id: AshBlind
   kind: source
   path: "/Textures/_Wega/Shaders/ashblind.swsl"
+
+- type: shader
+  id: AshMaskVignette
+  kind: source
+  path: "/Textures/_Wega/Shaders/ashmask.swsl"
