@@ -5,6 +5,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -12,6 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._Wega.Heretic.Ui;
 
+[Virtual]
 public class HereticWindow : BaseWindow
 {
     private const float TitleBarHeight = 32f;

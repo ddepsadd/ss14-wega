@@ -76,3 +76,79 @@
       task: IdleCompound
   - type: TimedDespawn
     lifetime: 30.0
+
+- type: entity
+  parent: BaseEntityHallucination
+  id: HallucinationMobCarpSpace
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: Mobs/Aliens/Carps/space.rsi
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: alive
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 3.5
+    baseSprintSpeed: 3.5
+  - type: HTN
+    rootTask:
+      task: SimpleHostileCompound
+  - type: NpcFactionMember
+    factions:
+    - SimpleHostile
+  - type: CombatMode
+  - type: MeleeWeapon
+    soundHit:
+        path: /Audio/_Wega/Effects/null.ogg
+    angle: 0
+    damage:
+      types:
+        Blunt: 0
+
+- type: entity
+  parent: BaseEntityHallucination
+  id: HallucinationMobXenoDrone
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: Mobs/Aliens/Xenos/drone.rsi
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: running
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 4
+    baseSprintSpeed: 4
+  - type: HTN
+    rootTask:
+      task: SimpleHostileCompound
+  - type: NpcFactionMember
+    factions:
+    - SimpleHostile
+  - type: CombatMode
+  - type: MeleeWeapon
+    soundHit:
+        path: /Audio/_Wega/Effects/null.ogg
+    angle: 0
+    damage:
+      types:
+        Blunt: 0
+
+- type: entity
+  parent: BaseEntityHallucination
+  id: HallucinationMobMothroach
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: Mobs/Animals/mothroach/mothroach.rsi
+    layers:
+    - map: [ "enum.DamageStateVisualLayers.Base" ]
+      state: mothroach
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 3
+    baseSprintSpeed: 3
+  - type: HTN
+    rootTask:
+      task: IdleCompound

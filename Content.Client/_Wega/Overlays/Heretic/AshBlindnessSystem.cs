@@ -6,8 +6,8 @@ namespace Content.Client._Wega.Overlays;
 
 public sealed partial class AshBlindnessSystem : EntitySystem
 {
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IOverlayManager _overlayMan = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IOverlayManager _overlayMan = default!;
 
     private AshBlindnessOverlay _overlay = default!;
     private bool _added;

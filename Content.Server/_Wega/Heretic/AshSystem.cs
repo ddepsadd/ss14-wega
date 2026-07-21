@@ -1,6 +1,7 @@
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Body.Components;
 using Content.Server.Damage.Systems;
+using Content.Server.Hallucinations;
 using Content.Server.Polymorph.Systems;
 using Content.Server.Temperature.Systems;
 using Content.Shared._Wega.Heretic;
@@ -33,26 +34,25 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Heretic;
 
-public sealed class AshSystem : EntitySystem
+public sealed partial class AshSystem : EntitySystem
 {
-    [Dependency] private readonly SharedMeleeWeaponSystem _melee = default!;
-    [Dependency] private readonly FlammableSystem _flammable = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly HereticKnowledgeSystem _knowledge = default!;
-    [Dependency] private readonly MovementSpeedModifierSystem _movement = default!;
-    [Dependency] private readonly DamageableSystem _damage = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly TemperatureSystem _temperature = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly PolymorphSystem _polymorph = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly SharedStealthSystem _stealth = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly StaminaSystem _stamina = default!;
-    [Dependency] private readonly IdentitySystem _identity = default!;
-    [Dependency] private readonly ExamineSystemShared _examine = default!;
+    [Dependency] private SharedMeleeWeaponSystem _melee = default!;
+    [Dependency] private FlammableSystem _flammable = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private HereticKnowledgeSystem _knowledge = default!;
+    [Dependency] private MovementSpeedModifierSystem _movement = default!;
+    [Dependency] private DamageableSystem _damage = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private PolymorphSystem _polymorph = default!;
+    [Dependency] private SharedStealthSystem _stealth = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private StaminaSystem _stamina = default!;
+    [Dependency] private IdentitySystem _identity = default!;
+    [Dependency] private ExamineSystemShared _examine = default!;
+    [Dependency] private HallucinationsSystem _hallucinations = default!;
 
     private const float GraspFireStacks = 1f;
     private const float FlamesFireStacks = 2f;
@@ -77,6 +77,10 @@ public sealed class AshSystem : EntitySystem
     private const float MaskGainPerSec = 1f;
     private const float MaskGainClose = 2.5f;
     private const float MaskDecayPerSec = 1f;
+    private const float MaskDamageFactor = 0.05f;
+    private const float MaskHitConsume = 1f;
+    private const float HitHallucinationSeconds = 1f;
+    private const float GraspHallucinationSeconds = 5f;
 
     private const float GibThreshold = 1500f;
     private const float GibBuffer = 35f;
@@ -121,6 +125,7 @@ public sealed class AshSystem : EntitySystem
         SubscribeLocalEvent<HereticMantleComponent, ToggleActionEvent>(OnMantleToggle);
         SubscribeLocalEvent<HereticBloodthornComponent, DamageChangedEvent>(OnBloodthornDamage);
         SubscribeLocalEvent<HereticMaskComponent, ToggleActionEvent>(OnMaskToggle);
+        SubscribeLocalEvent<HereticMaskVictimComponent, DamageModifyEvent>(OnMaskVictimDamage);
     }
 
     public override void Update(float frameTime)
@@ -342,6 +347,19 @@ public sealed class AshSystem : EntitySystem
         _popup.PopupEntity(Loc.GetString(msg), uid, uid);
     }
 
+    private void OnMaskVictimDamage(EntityUid uid, HereticMaskVictimComponent comp, DamageModifyEvent args)
+    {
+        if (args.Damage.GetTotal() <= FixedPoint2.Zero)
+            return;
+        if (!HasComp<HereticComponent>(args.Origin))
+            return;
+
+        args.Damage *= 1f + comp.Stacks * MaskDamageFactor;
+
+        comp.Stacks = MathF.Max(0f, comp.Stacks - MaskHitConsume);
+        Dirty(uid, comp);
+    }
+
     private void TickMantleHeal(EntityUid uid, float frameTime)
     {
         if (!_mobState.IsAlive(uid))
@@ -383,6 +401,9 @@ public sealed class AshSystem : EntitySystem
             mark.ExpireAt = _timing.CurTime + TimeSpan.FromSeconds(BloodthornSeconds);
             mark.Accumulated = 0f;
         }
+
+        if (HasComp<HereticMaskComponent>(uid))
+            _hallucinations.StartHallucinations(args.Target, "Hallucinations", TimeSpan.FromSeconds(GraspHallucinationSeconds), true, "HereticAsh");
 
         if (!_knowledge.HasKnowledge(uid, "HereticAshGrasp"))
             return;
@@ -545,6 +566,19 @@ public sealed class AshSystem : EntitySystem
         {
             _stealth.SetVisibility(user, 1f, stealth);
             mantle.RevealUntil = _timing.CurTime + TimeSpan.FromSeconds(MantleRevealSeconds);
+        }
+
+        if (!HasComp<HereticComponent>(user))
+        {
+            foreach (var hit in args.HitEntities)
+            {
+                if (hit == user)
+                    continue;
+                if (!TryComp<HereticMaskComponent>(hit, out var mask) || !mask.Active)
+                    continue;
+                _hallucinations.StartHallucinations(user, "Hallucinations", TimeSpan.FromSeconds(HitHallucinationSeconds), true, "HereticAshFlash");
+                break;
+            }
         }
 
         if (!_knowledge.HasKnowledge(user, "HereticAshFury"))

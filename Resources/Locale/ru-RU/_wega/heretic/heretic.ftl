@@ -10,6 +10,8 @@ heretic-store-tier = уровень {$tier}
 heretic-store-points-label = Очки знаний
 heretic-store-path = путь: {$path}
 heretic-store-path-none = выбери путь
+heretic-store-tree-empty = Ты ещё не постиг ни одного знания
+heretic-store-shop-empty = Нет доступных знаний
 
 heretic-path-ash-name = Пепел
 

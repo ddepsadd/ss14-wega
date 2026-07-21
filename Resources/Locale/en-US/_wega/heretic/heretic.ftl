@@ -10,6 +10,8 @@ heretic-store-tier = tier {$tier}
 heretic-store-points-label = Knowledge Points
 heretic-store-path = path: {$path}
 heretic-store-path-none = choose a path
+heretic-store-tree-empty = You have not yet grasped any knowledge
+heretic-store-shop-empty = No knowledge available
 
 heretic-path-ash-name = Ash
 

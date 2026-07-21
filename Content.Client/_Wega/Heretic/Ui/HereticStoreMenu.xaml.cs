@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Content.Shared.Heretic;
@@ -45,6 +46,8 @@ public sealed partial class HereticStoreMenu : HereticWindow
     private static readonly Color PathDimCol   = Color.FromHex("#9088A4");
     private static readonly Color RuneChosenBg = Color.FromHex("#4A3A16");
     private static readonly Color RuneDimBg    = Color.FromHex("#342C48");
+
+    private readonly Dictionary<string, Color> _pathColors = new();
 
     private readonly IPrototypeManager _proto;
     private readonly SpriteSystem _sprite;
@@ -114,9 +117,16 @@ public sealed partial class HereticStoreMenu : HereticWindow
     {
         PointsLabel.Text = state.Points.ToString();
 
+        var treeScroll = TreeScroll.GetScrollValue();
+        var shopScroll = ShopScroll.GetScrollValue();
+
         RuneRow.RemoveAllChildren();
         TreeList.Children.Clear();
         ShopList.Children.Clear();
+
+        _pathColors.Clear();
+        foreach (var path in state.Paths)
+            _pathColors[path.Id] = Color.TryFromHex(path.Color) ?? AvailStripe;
 
         if (state.Paths.Count > 0)
             MakeRuneRow(state);
@@ -131,6 +141,8 @@ public sealed partial class HereticStoreMenu : HereticWindow
             }
             TreeList.AddChild(MakeCard(node, state.Points, isShop: false));
         }
+        if (TreeList.ChildCount == 0)
+            TreeList.AddChild(MakePlaceholder("heretic-store-tree-empty"));
 
         var lastShop = int.MinValue;
         foreach (var node in state.Nodes.Where(n => n.Status != HereticNodeStatus.Owned).OrderBy(n => n.Stage))
@@ -142,11 +154,32 @@ public sealed partial class HereticStoreMenu : HereticWindow
             }
             ShopList.AddChild(MakeCard(node, state.Points, isShop: true));
         }
+        if (ShopList.ChildCount == 0)
+            ShopList.AddChild(MakePlaceholder("heretic-store-shop-empty"));
+
+        TreeScroll.SetScrollValue(treeScroll);
+        ShopScroll.SetScrollValue(shopScroll);
     }
 
     private void MakeRuneRow(HereticStoreState state)
     {
         var noPath = state.CurrentPath == null;
+
+        var caption = new Label
+        {
+            FontOverride = _fCaption,
+            FontColorOverride = noPath ? GoldCol : CaptionCol,
+            VerticalAlignment = VAlignment.Center,
+            Margin = new Thickness(0, 0, 10, 0),
+        };
+        if (noPath)
+            caption.Text = Loc.GetString("heretic-store-path-none");
+        else
+        {
+            var chosen = state.Paths.FirstOrDefault(p => p.Chosen);
+            caption.Text = Loc.GetString("heretic-store-path", ("path", Loc.GetString(chosen.Name)));
+        }
+        RuneRow.AddChild(caption);
 
         foreach (var path in state.Paths)
         {
@@ -189,7 +222,7 @@ public sealed partial class HereticStoreMenu : HereticWindow
         var buyable = isShop && node.Status == HereticNodeStatus.Available && affordable;
 
         Color stripe;
-        if (!isShop) stripe = OwnedStripe;
+        if (!isShop) stripe = node.Path != null && _pathColors.TryGetValue(node.Path, out var pc) ? pc : OwnedStripe;
         else if (conflicted) stripe = ConflictStripe;
         else if (locked) stripe = LockedStripe;
         else stripe = AvailStripe;
@@ -331,7 +364,9 @@ public sealed partial class HereticStoreMenu : HereticWindow
             Margin = new Thickness(0, 6, 0, 7),
         });
 
-        var tipKey = node.Description.Replace("-desc", "-tooltip");
+        var tipKey = node.Description.EndsWith("-desc")
+            ? node.Description.Replace("-desc", "-tooltip")
+            : node.Description;
         var body = Loc.TryGetString(tipKey, out var rich)
             ? rich
             : Loc.GetString(node.Description);
@@ -343,6 +378,18 @@ public sealed partial class HereticStoreMenu : HereticWindow
         box.AddChild(col);
         return box;
     }
+    private Control MakePlaceholder(string loc)
+    {
+        return new Label
+        {
+            Text = Loc.GetString(loc),
+            FontOverride = _fDesc,
+            FontColorOverride = LockedDesc,
+            HorizontalAlignment = HAlignment.Center,
+            Margin = new Thickness(0, 16, 0, 0),
+        };
+    }
+
     private Control MakeTierLabel(int stage)
     {
         var row = new BoxContainer
