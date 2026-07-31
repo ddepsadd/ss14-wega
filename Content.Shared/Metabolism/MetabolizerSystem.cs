@@ -228,7 +228,7 @@ public sealed partial class MetabolizerSystem : EntitySystem
                     default:
                         // Corvax-Wega-Edit-start
                         if (TryComp<DisableMetabolismEffectsComponent>(actualEntity, out var disable) &&
-                            !disable.AllowedEffects.Contains(effect.GetType()))
+                            !disable.AllowedEffects.Any(ae => ae.GetType() == effect.GetType()))
                             break;
                         // Corvax-Wega-Edit-end
                         _entityEffects.ApplyEffect(actualEntity, effect, scale);
