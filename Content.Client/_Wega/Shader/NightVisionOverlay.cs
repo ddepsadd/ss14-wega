@@ -15,7 +15,7 @@ public sealed partial class NightVisionOverlay : Overlay
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
 
-    private static readonly ProtoId<ShaderPrototype> NightVision = "WegaNightVision";
+    private static readonly ProtoId<ShaderPrototype> NightVision = "NightVision";
     public override OverlaySpace Space => OverlaySpace.WorldSpace;
     public override bool RequestScreenTexture => true;
     private readonly ShaderInstance _baseShader;

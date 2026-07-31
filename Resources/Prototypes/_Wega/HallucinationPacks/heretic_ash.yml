@@ -1,0 +1,27 @@
+- type: hallucinationsPack
+  id: HereticAshFlash
+  range: 5
+  spawnRate: 1
+  minChance: 1.0
+  maxChance: 1.0
+  increaseChance: 0
+  maxSpawns: 6
+  entities:
+  - HallucinationMobBearSpace
+  - HallucinationMobCarpSpace
+  - HallucinationMobXenoDrone
+  - HallucinationMobMothroach
+
+- type: hallucinationsPack
+  id: HereticAsh
+  range: 6
+  spawnRate: 2
+  minChance: 0.7
+  maxChance: 0.9
+  increaseChance: 0.1
+  maxSpawns: 3
+  entities:
+  - HallucinationMobBearSpace
+  - HallucinationMobCarpSpace
+  - HallucinationMobXenoDrone
+  - HallucinationMobMothroach

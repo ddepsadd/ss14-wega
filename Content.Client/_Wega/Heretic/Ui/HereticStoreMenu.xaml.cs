@@ -126,7 +126,7 @@ public sealed partial class HereticStoreMenu : HereticWindow
 
         _pathColors.Clear();
         foreach (var path in state.Paths)
-            _pathColors[path.Id] = Color.TryFromHex(path.Color) ?? AvailStripe;
+            _pathColors[path.Id] = Color.FromHex(path.Color, AvailStripe);
 
         if (state.Paths.Count > 0)
             MakeRuneRow(state);
@@ -183,7 +183,7 @@ public sealed partial class HereticStoreMenu : HereticWindow
 
         foreach (var path in state.Paths)
         {
-            var pathColor = Color.TryFromHex(path.Color) ?? AvailStripe;
+            var pathColor = Color.FromHex(path.Color, AvailStripe);
 
             var rune = new HereticPoly(path.Chosen ? RuneChosenBg : RuneDimBg)
             {
