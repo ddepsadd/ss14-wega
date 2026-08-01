@@ -1,3 +1,18 @@
-# Corvax-Wega :: Heretic (Phase 5) — transmutation rune (the workbench)
-# Empty on purpose: filled in during Phase 5. Keeping it comment-only
-# avoids prototype validation errors before the C# types are wired.
+- type: entity
+  id: HereticRune
+  name: transmutation rune
+  description: An eldritch sigil scrawled in ash. Lay the required offerings upon it to perform a rite.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    drawdepth: HighFloorObjects
+    sprite: _Wega/Heretic/ritual_rune.rsi
+    state: icon
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Appearance
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: HereticRune

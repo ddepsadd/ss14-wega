@@ -1,6 +1,6 @@
 using Robust.Shared.GameStates;
 
-namespace Content.Shared._Wega.Heretic;
+namespace Content.Shared.Heretic;
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class HereticMaskVictimComponent : Component

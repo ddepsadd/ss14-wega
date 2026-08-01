@@ -1,3 +1,10 @@
-# Corvax-Wega :: Heretic (Phase 5) — hereticRitual recipes — blade, sacrifice, robe
-# Empty on purpose: filled in during Phase 5. Keeping it comment-only
-# avoids prototype validation errors before the C# types are wired.
+- type: hereticRitual
+  id: RitualAshBlade
+  input:
+  - whitelist:
+      tags: [ Knife ]
+  - whitelist:
+      tags: [ Matchstick ]
+  - proto: Ash
+  output:
+  - HereticAshBlade

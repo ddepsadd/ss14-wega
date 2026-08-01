@@ -4,7 +4,6 @@ using Content.Server.Damage.Systems;
 using Content.Server.Hallucinations;
 using Content.Server.Polymorph.Systems;
 using Content.Server.Temperature.Systems;
-using Content.Shared._Wega.Heretic;
 using Content.Shared.Actions;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;

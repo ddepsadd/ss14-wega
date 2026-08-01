@@ -16,3 +16,25 @@
     - "Ave Mansus, da mihi vires!"
     - "Aperi portam, tenebrae veniunt!"
     - "Sanguis et cinis, audite me!"
+
+- type: entity
+  parent: BaseItem
+  id: HereticAshBlade
+  name: ashen blade
+  description: A blade of compressed ash and eldritch heat.
+  components:
+  - type: MeleeWeapon
+    wideAnimationRotation: 45
+    swingBeverage: false
+    swingLeft: true
+    attackRate: 1.5
+    damage:
+      types:
+        Slash: 15
+    soundHit:
+      path: /Audio/Weapons/bladeslice.ogg
+  - type: Sprite
+    sprite: _Wega/Heretic/Blades/ashen_blade.rsi
+    state: icon
+  - type: Item
+    size: Normal

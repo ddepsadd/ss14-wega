@@ -1,4 +1,4 @@
-using Content.Shared._Wega.Heretic;
+using Content.Shared.Heretic;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
 
