@@ -5,8 +5,11 @@
   description: "Призови Хватку Мансуса в руку, затем коснись жертвы."
   categories: [ HideSpawnMenu ]
   components:
+  - type: Sprite
+    sprite: _Wega/Heretic/abilities_heretic.rsi
+    layers:
+    - state: mansus_grasp
   - type: Action
-    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: "mansus_grasp" }
     useDelay: 0.5
   - type: InstantAction
     event: !type:HereticMansusGraspEvent
@@ -18,8 +21,11 @@
   description: "Открой кодекс знаний."
   categories: [ HideSpawnMenu ]
   components:
+  - type: Sprite
+    sprite: _Wega/Heretic/abilities_heretic.rsi
+    layers:
+    - state: open_store
   - type: Action
-    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: "open_store" }
     useDelay: 0.5
   - type: InstantAction
     event: !type:HereticOpenStoreEvent
@@ -31,10 +37,11 @@
   description: "Поджигает всё вокруг."
   categories: [ HideSpawnMenu ]
   components:
+  - type: Sprite
+    sprite: _Wega/Heretic/abilities_heretic.rsi
+    layers:
+    - state: volcano_blast
   - type: Action
-    icon:
-      sprite: _Wega/Heretic/abilities_heretic.rsi
-      state: volcano_blast
     useDelay: 20
   - type: InstantAction
     event: !type:HereticAshExplosionEvent
@@ -46,10 +53,15 @@
   description: "Воспламенись. Скорость и ярость атак в обмен на пламя."
   categories: [ HideSpawnMenu ]
   components:
+  - type: Sprite
+    sprite: _Wega/Heretic/abilities_heretic.rsi
+    layers:
+    - state: ashen_rage0
+      map: ["enum.ActionVisuals.Icon"]
+    - state: ashen_rage1
+      map: ["enum.ActionVisuals.IconToggled"]
   - type: Action
     useDelay: 1
-    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashen_rage0 }
-    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: ashen_rage1 }
 
 - type: entity
   parent: BaseToggleAction
@@ -58,10 +70,15 @@
   description: "Ускорься, преломляя свет пеплом."
   categories: [ HideSpawnMenu ]
   components:
+  - type: Sprite
+    sprite: _Wega/Heretic/abilities_heretic.rsi
+    layers:
+    - state: shadowcloak
+      map: ["enum.ActionVisuals.Icon"]
+    - state: shadowcloak
+      map: ["enum.ActionVisuals.IconToggled"]
   - type: Action
     useDelay: 1
-    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
-    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
 
 - type: entity
   parent: BaseToggleAction
@@ -70,10 +87,15 @@
   description: "Источая газ, беги и заставь убегать."
   categories: [ HideSpawnMenu ]
   components:
+  - type: Sprite
+    sprite: _Wega/Heretic/abilities_heretic.rsi
+    layers:
+    - state: shadowcloak
+      map: ["enum.ActionVisuals.Icon"]
+    - state: shadowcloak
+      map: ["enum.ActionVisuals.IconToggled"]
   - type: Action
     useDelay: 1
-    icon: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
-    iconOn: { sprite: _Wega/Heretic/abilities_heretic.rsi, state: shadowcloak }
 
 - type: entity
   parent: BaseAction
@@ -82,10 +104,11 @@
   description: "Обратись в пепел и пламя, пройди сквозь стены."
   categories: [ HideSpawnMenu ]
   components:
+  - type: Sprite
+    sprite: _Wega/Heretic/abilities_heretic.rsi
+    layers:
+    - state: ashen_shift
   - type: Action
-    icon:
-      sprite: _Wega/Heretic/abilities_heretic.rsi
-      state: ashen_shift
     useDelay: 20
   - type: InstantAction
     event: !type:HereticAshShiftEvent
