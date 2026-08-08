@@ -5,9 +5,6 @@
     enum.HumanoidVisualLayers.Head:
       limit: 1
       required: false
-    enum.HumanoidVisualLayers.HeadTop:
-      limit: 1
-      required: false
     enum.HumanoidVisualLayers.Hair:
       limit: 1
       required: false
@@ -29,10 +26,22 @@
     enum.HumanoidVisualLayers.RArm:
       limit: 1
       required: false
+    enum.HumanoidVisualLayers.LHand:
+      limit: 1
+      required: false
+    enum.HumanoidVisualLayers.RHand:
+      limit: 1
+      required: false
     enum.HumanoidVisualLayers.LLeg:
       limit: 1
       required: false
     enum.HumanoidVisualLayers.RLeg:
+      limit: 1
+      required: false
+    enum.HumanoidVisualLayers.LFoot:
+      limit: 1
+      required: false
+    enum.HumanoidVisualLayers.RFoot:
       limit: 1
       required: false
 
@@ -195,7 +204,6 @@
         Asphyxiation: -10
   - type: AtmosExposed
   - type: Temperature
-    currentTemperature: 310.15
     specificHeat: 42
   - type: TemperatureDamage
     heatDamageThreshold: 403.15
@@ -538,6 +546,7 @@
   - type: Brain
   - type: Organ
     category: Brain
+  - type: ChildOrgan
   - type: GibbableOrgan
   - type: InputMover
   - type: Examiner
@@ -551,6 +560,9 @@
     radius: 2
     energy: 2
     color: "#5290d2ff"
+  - type: Construction
+    graph: UpgradeKitBrain
+    node: start
 
 - type: entity
   parent: [ OrganBaseLungs, OrganAndroidInternal, OrganAndroidMetabolizer ]
