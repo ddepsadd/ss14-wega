@@ -49,5 +49,4 @@ heretic-mantle-cloak-off = Cloak of Mantle is off.
 heretic-fury-on = Fury of Ash is on.
 heretic-fury-off = Fury of Ash is off.
 
-heretic-mask-on = Mask is on.
-heretic-mask-off = Mask is off.
+c

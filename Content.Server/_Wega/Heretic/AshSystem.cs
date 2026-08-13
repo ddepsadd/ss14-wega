@@ -110,7 +110,7 @@ public sealed partial class AshSystem : EntitySystem
         SubscribeLocalEvent<HereticComponent, MansusGraspHitEvent>(OnGraspHit);
         SubscribeLocalEvent<HereticComponent, HereticAshExplosionEvent>(OnAshFlames);
         SubscribeLocalEvent<HereticComponent, GetFireProtectionEvent>(OnFireProtection);
-        SubscribeLocalEvent<HereticComponent, ModifyChangedTemperatureEvent>(OnTempChange);
+        SubscribeLocalEvent<HereticComponent, BeforeHeatExchangeEvent>(OnTempChange);
         SubscribeLocalEvent<HereticComponent, RefreshMovementSpeedModifiersEvent>(OnRefreshSpeed);
         SubscribeLocalEvent<HereticFuryComponent, ToggleActionEvent>(OnFuryToggle);
         SubscribeLocalEvent<MeleeWeaponComponent, GetMeleeAttackRateEvent>(OnAttackRate);
@@ -434,12 +434,10 @@ public sealed partial class AshSystem : EntitySystem
         }
     }
 
-    private void OnTempChange(EntityUid uid, HereticComponent comp, ModifyChangedTemperatureEvent args)
+    private void OnTempChange(EntityUid uid, HereticComponent comp, ref BeforeHeatExchangeEvent args)
     {
-        if (args.TemperatureDelta <= 0)
-            return;
         if (_knowledge.HasKnowledge(uid, "HereticAshMantle"))
-            args.TemperatureDelta *= 0.5f;
+            args.HeatTransferModifier *= 0.5f;
     }
 
     private void OnRefreshSpeed(EntityUid uid, HereticComponent comp, RefreshMovementSpeedModifiersEvent args)
@@ -517,7 +515,7 @@ public sealed partial class AshSystem : EntitySystem
             _flammable.AdjustFireStacks(uid, -GibFadeRate * curved, fl);
         }
 
-        var temp = TryComp<TemperatureComponent>(uid, out var t) ? t.CurrentTemperature : 0f;
+        var temp = TryComp<TemperatureComponent>(uid, out var t) ? t.Temperature : 0f;
         var notBurning = !TryComp<FlammableComponent>(uid, out var f) || !f.OnFire;
         if (notBurning && temp < SafeTemp)
             RemComp<HereticBurnVictimComponent>(uid);
